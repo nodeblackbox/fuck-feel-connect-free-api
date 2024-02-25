@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bluetooth Device Connection</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        .log {
+            background-color: #f4f4f4;
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-top: 20px;
+            height: 200px;
+            overflow-y: scroll;
+        }
+        .status {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h2>Bluetooth Device Interactions</h2>
+    <button id="connect">Connect to Device</button>
+    <button id="sendPayload">Send Custom Payload</button>
+    <div class="log" id="log"></div>
+    <div class="status" id="status"></div>
+    <div id="deviceInfo"></div>
+
+    <script>
+        let device, server;
+        const logElement = document.getElementById("log");
+        const statusElement = document.getElementById("status");
+
+        function addToLog(message) {
+            const entry = document.createElement("div");
+            entry.textContent = message;
+            logElement.appendChild(entry);
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+
+        function updateStatus(message) {
+            statusElement.textContent = message;
+        }
+
+        async function connectToDeviceAndInitializeServices() {
+            try {
+                updateStatus("Requesting Bluetooth Device...");
+                device = await navigator.bluetooth.requestDevice({
+                    acceptAllDevices: true,
+                     optionalServices: [
+              "a0d70001-4c16-4ba7-977a-d394920e13a3",
+              "88f82580-0000-01e6-aace-0002a5d5c51b",
+              "00001900-0000-1000-8000-00805f9b34fb",
+              65504,
+              65504,
+              65504,
+              65504,
+              44544,
+              "f000bb03-0451-4000-b000-000000000000",
+              65282,
+              65024,
+              5120,
+              6159,
+              5632,
+              "battery_service",
+            ] 
+                });
+
+                server = await device.gatt.connect();
+                addToLog(`Connected to ${device.name}`);
+                updateStatus("Discovering Services...");
+
+                const services = await server.getPrimaryServices();
+                services.forEach(async (service) => {
+                    addToLog(`Discovered service: ${service.uuid}`);
+                    const characteristics = await service.getCharacteristics();
+                    characteristics.forEach(characteristic => {
+                        addToLog(`Characteristic: ${characteristic.uuid}`);
+                    });
+                });
+                updateStatus("Service discovery complete.");
+            } catch (error) {
+                addToLog(`Connection failed: ${error}`);
+                updateStatus("Failed to connect.");
+            }
+        }
+
+async function sendCustomPayload() {
+    const serviceUuid = "00001900-0000-1000-8000-00805f9b34fb"; // Use the actual service UUID
+    const characteristicUuid = "00001902-0000-1000-8000-00805f9b34fb"; // Use the actual characteristic UUID
+
+    // Define the custom payload to match the observed pattern
+    const customPayload = new Uint8Array([1, 4]); // Example payload
+
+    try {
+        updateStatus("Sending custom payload...");
+        const service = await server.getPrimaryService(serviceUuid);
+        const characteristic = await service.getCharacteristic(characteristicUuid);
+        await characteristic.writeValue(customPayload);
+        addToLog("Custom payload sent successfully.");
+        updateStatus("Payload sent.");
+    } catch (error) {
+        addToLog(`Sending custom payload failed: ${error}`);
+        updateStatus("Failed to send payload.");
+    }
+}
+        document.getElementById("connect").addEventListener("click", connectToDeviceAndInitializeServices);
+        document.getElementById("sendPayload").addEventListener("click", sendCustomPayload);
+    </script>
+</body>
+</html>
+
+
