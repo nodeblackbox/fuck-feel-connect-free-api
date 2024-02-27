@@ -10,69 +10,118 @@
       function sendCommand(command) {
         socket.emit("sendCommand", command);
       }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        const intensityMap = {
+          Off: 0,
+          Low: 2,
+          LowMedium: 4,
+          Medium: 6,
+          MediumHigh: 8,
+          High: 9,
+          UltraHigh: 9
+        };
+
+        const container = document.getElementById("intensity-levels-container");
+        Object.keys(intensityMap).forEach((level, index) => {
+          const levelDiv = document.createElement("div");
+          levelDiv.className = "intensity-level";
+          levelDiv.innerHTML = `
+            <span>Level ${index + 1}: ${level}</span>
+            <input id="duration-level-${index}" type="number" min="1" max="60" value="5">
+            <select id="intensity-level-${index}">
+                ${Object.keys(intensityMap).map(intensity => `<option value="${intensity}">${intensity}</option>`).join("")}
+            </select>
+            <button onclick="testIntensity('${level}', document.getElementById('duration-level-${index}').value)" class="button">Test</button>
+          `;
+          container.appendChild(levelDiv);
+        });
+      });
     </script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    
     <style>
-      .flex {
+      body {
+        font-family: "Poppins", sans-serif;
+        background-color: #f4f7f6;
+        margin: 0;
+        padding: 20px;
+        color: #333;
+      }
+      h1 {
+        color: #333;
+        text-align: center;
+        margin-bottom: 20px;
+      }
+      .button {
+        background-color: #4caf50; /* Green */
+        border: none;
+        color: white;
+        padding: 15px 32px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 16px;
+        margin: 4px 2px;
+        cursor: pointer;
+        border-radius: 5px;
+        transition: background-color 0.3s ease;
+      }
+      .button:hover {
+        background-color: #45a049;
+      }
+      .control-panel {
         display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 20px;
       }
-      .items-center {
+      .log,
+      .status {
+        background-color: #fff;
+        padding: 10px;
+        border-radius: 5px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        margin-bottom: 10px;
+      }
+      .status {
+        font-weight: 600;
+      }
+      .intensity-level {
+        background: #fff;
+        padding: 20px;
+        border-radius: 5px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        margin-bottom: 10px;
+        display: flex;
         align-items: center;
+        justify-content: space-between;
       }
-      .mb-4 {
-        margin-bottom: 1rem;
-      }
-      .bg-gray-200 {
-        background-color: #e2e8f0;
-      }
-      .rounded {
-        border-radius: 0.25rem;
-      }
-      .border {
-        border-width: 1px;
-      }
-      .border-gray-200 {
-        border-color: #e2e8f0;
-      }
-      .p-2 {
-        padding: 0.5rem;
-      }
-      .ml-2 {
-        margin-left: 0.5rem;
-      }
-      .bg-blue-500 {
-        background-color: #4299e1;
-      }
-      .hover\:bg-blue-700:hover {
-        background-color: #2b6cb0;
-      }
-      .text-white {
-        color: #fff;
-      }
-      .font-bold {
-        font-weight: 700;
-      }
-      .py-2 {
-        padding-top: 0.5rem;
-        padding-bottom: 0.5rem;
-      }
-      .px-4 {
-        padding-left: 1rem;
-        padding-right: 1rem;
+      .intensity-level select,
+      .intensity-level input {
+        padding: 10px;
+        margin-left: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        font-family: "Poppins", sans-serif;
       }
     </style>
   </head>
   <body>
     <h1>Bluetooth Sex Toy Control Panel</h1>
-
-    <button onclick="sendCommand('start')">Start Massage</button>
-    <button onclick="sendCommand('stop')">Stop Massage</button>
-
-    <button id="connect">Connect to Device</button>
-    <button id="sendPayload">Send Custom Payload</button>
-    <div class="log" id="log"></div>
-    <div class="status" id="status"></div>
-    <div id="deviceInfo"></div>
-    <div id="intensity-levels-container" class="container"></div>
+    <div class="control-panel">
+        <button onclick="sendCommand('start')" class="button">Start Massage</button>
+        <button onclick="sendCommand('stop')" class="button">Stop Massage</button>
+        <button id="connect" class="button">Connect to Device</button>
+        <button id="sendPayload" class="button">Send Custom Payload</button>
+    </div>
+    <div class="log" id="log">Log:</div>
+    <div class="status" id="status">Status:</div>
+    <div id="intensity-levels-container"></div>
     <script>
       // Script begins here
       document.addEventListener("DOMContentLoaded", () => {
