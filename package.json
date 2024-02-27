@@ -1,0 +1,14 @@
+{
+  "name": "fuck-feel-connect-free-api",
+  "version": "1.0.0",
+  "description": "A shitty ride deserves a Revamp after one year of trying to apply for the API and realizing that API Sign up pages broken I decided to make my own Bluetooth API for the hot octopus",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "socket.io": "^4.7.4"
+  }
+}
