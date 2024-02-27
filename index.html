@@ -1,58 +1,162 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
+  <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Bluetooth Device Connection</title>
+    <title>Intensity Controller</title>
     <style>
-
-        body {
-            font-family: Arial, sans-serif;
-            padding: 20px;
-        }
-        .log {
-            background-color: #f4f4f4;
-            border: 1px solid #ddd;
-            padding: 10px;
-            margin-top: 20px;
-            height: 200px;
-            overflow-y: scroll;
-        }
-        .status {
-            margin-top: 10px;
-        }
+      body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+      }
+      .log {
+        background-color: #f4f4f4;
+        border: 1px solid #ddd;
+        padding: 10px;
+        margin-top: 20px;
+        height: 200px;
+        overflow-y: scroll;
+      }
+      .status {
+        margin-top: 10px;
+      }
+      /* Basic styling for layout and buttons */
+      .flex {
+        display: flex;
+      }
+      .items-center {
+        align-items: center;
+      }
+      .mb-4 {
+        margin-bottom: 1rem;
+      }
+      .bg-gray-200 {
+        background-color: #e2e8f0;
+      }
+      .rounded {
+        border-radius: 0.25rem;
+      }
+      .border {
+        border-width: 1px;
+      }
+      .border-gray-200 {
+        border-color: #e2e8f0;
+      }
+      .p-2 {
+        padding: 0.5rem;
+      }
+      .ml-2 {
+        margin-left: 0.5rem;
+      }
+      .bg-blue-500 {
+        background-color: #4299e1;
+      }
+      .hover\:bg-blue-700:hover {
+        background-color: #2b6cb0;
+      }
+      .text-white {
+        color: #fff;
+      }
+      .font-bold {
+        font-weight: 700;
+      }
+      .py-2 {
+        padding-top: 0.5rem;
+        padding-bottom: 0.5rem;
+      }
+      .px-4 {
+        padding-left: 1rem;
+        padding-right: 1rem;
+      }
     </style>
-</head>
-<body>
-    <h2>Bluetooth Device Interactions tests bata</h2>
+  </head>
+  <body>
     <button id="connect">Connect to Device</button>
     <button id="sendPayload">Send Custom Payload</button>
     <div class="log" id="log"></div>
     <div class="status" id="status"></div>
     <div id="deviceInfo"></div>
+    <div id="intensity-levels-container" class="container"></div>
 
     <script>
-        let device, server;
-        const logElement = document.getElementById("log");
-        const statusElement = document.getElementById("status");
+      // Script begins here
+      document.addEventListener("DOMContentLoaded", () => {
+        // Mapping of intensity levels to numeric values
+        const intensityMap = {
+          Off: 0,
+          Low: 2,
+          LowMedium: 4,
+          Medium: 6,
+          MediumHigh: 8,
+          High: 9,
+          UltraHigh: 9
+        };
 
-        function addToLog(message) {
-            const entry = document.createElement("div");
-            entry.textContent = message;
-            logElement.appendChild(entry);
-            logElement.scrollTop = logElement.scrollHeight;
-        }
+        // Dynamically create UI elements for testing different intensity levels
+        const container = document.getElementById("intensity-levels-container");
+        Object.keys(intensityMap).forEach((level, index) => {
+          const levelDiv = document.createElement("div");
+          levelDiv.className = "flex items-center mb-4";
+          levelDiv.innerHTML = `
+            <div class="w-1/4">Level ${index + 1}</div>
+            <div class="w-1/4">
+                <input
+                    id="duration-level-${index}"
+                    type="number"
+                    min="1"
+                    max="60"
+                    value="5"
+                    class="bg-gray-200 rounded border border-gray-200 p-2"
+                />
+            </div>
+            <div class="w-1/4">
+                <select
+                    id="intensity-level-${index}"
+                    class="bg-gray-200 rounded"
+                >
+                    ${Object.keys(intensityMap)
+                      .map(
+                        (intensity) =>
+                          `<option value="${intensity}">${intensity}</option>`
+                      )
+                      .join("")}
+                </select>
+            </div>
+            <div class="w-1/4">
+                <button
+                    onclick="testIntensity(document.getElementById('intensity-level-${index}').value, document.getElementById('duration-level-${index}').value)"
+                    class="ml-2 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                >
+                    Test
+                </button>
+            </div>
+        `;
+          container.appendChild(levelDiv);
+        });
+      });
 
-        function updateStatus(message) {
-            statusElement.textContent = message;
-        }
+      // Device and service initialization
+      let device, server;
+      const logElement = document.getElementById("log");
+      const statusElement = document.getElementById("status");
 
-        async function connectToDeviceAndInitializeServices() {
-            try {
-                updateStatus("Requesting Bluetooth Device...");
-                device = await navigator.bluetooth.requestDevice({
-                    acceptAllDevices: true,
-                     optionalServices: [
+      function addToLog(message) {
+        const entry = document.createElement("div");
+        entry.textContent = message;
+        logElement.appendChild(entry);
+        logElement.scrollTop = logElement.scrollHeight;
+      }
+
+      function updateStatus(message) {
+        statusElement.textContent = message;
+      }
+
+      // Connect to the device and initialize services with error handling
+      async function connectToDeviceAndInitializeServices() {
+        try {
+          updateStatus("Requesting Bluetooth Device...");
+          device = await navigator.bluetooth.requestDevice({
+            acceptAllDevices: true,
+            optionalServices: [
               "a0d70001-4c16-4ba7-977a-d394920e13a3",
               "88f82580-0000-01e6-aace-0002a5d5c51b",
               "00001900-0000-1000-8000-00805f9b34fb",
@@ -67,52 +171,87 @@
               5120,
               6159,
               5632,
-              "battery_service",
-            ] 
-                });
+              "battery_service"
+            ]
+          });
 
-                server = await device.gatt.connect();
-                addToLog(`Connected to ${device.name}`);
-                updateStatus("Discovering Services...");
+          server = await device.gatt.connect();
+          addToLog(`Connected to ${device.name}`);
+          updateStatus("Discovering Services...");
 
-                const services = await server.getPrimaryServices();
-                services.forEach(async (service) => {
-                    addToLog(`Discovered service: ${service.uuid}`);
-                    const characteristics = await service.getCharacteristics();
-                    characteristics.forEach(characteristic => {
-                        addToLog(`Characteristic: ${characteristic.uuid}`);
-                    });
-                });
-                updateStatus("Service discovery complete.");
-            } catch (error) {
-                addToLog(`Connection failed: ${error}`);
-                updateStatus("Failed to connect.");
-            }
+          const services = await server.getPrimaryServices();
+          services.forEach(async (service) => {
+            addToLog(`Discovered service: ${service.uuid}`);
+            const characteristics = await service.getCharacteristics();
+            characteristics.forEach((characteristic) => {
+              addToLog(`Characteristic: ${characteristic.uuid}`);
+            });
+          });
+          updateStatus("Service discovery complete.");
+        } catch (error) {
+          addToLog(`Connection failed: ${error}`);
+          updateStatus("Failed to connect.");
         }
+      }
 
-async function sendCustomPayload() {
-    const serviceUuid = "00001900-0000-1000-8000-00805f9b34fb"; // Use the actual service UUID
-    const characteristicUuid = "00001902-0000-1000-8000-00805f9b34fb"; // Use the actual characteristic UUID
+      function testIntensity(level, duration) {
+        const intensityMap = {
+          Off: 0,
+          Low: 2,
+          LowMedium: 4,
+          Medium: 6,
+          MediumHigh: 8,
+          High: 9,
+          UltraHigh: 9
+        };
 
-    // Define the custom payload to match the observed pattern
-    const customPayload = new Uint8Array([1, 4]); // Example payload
+        if (intensityMap.hasOwnProperty(level)) {
+          const intensityValue = intensityMap[level];
+          const payload = new Uint8Array([1, intensityValue]);
+          sendCustomPayload(payload)
+            .then(() => {
+              console.log(`Intensity '${level}' set for ${duration} seconds.`);
+              setTimeout(() => {
+                const offPayload = new Uint8Array([1, 0]);
+                sendCustomPayload(offPayload);
+                console.log("Device turned off after the duration.");
+              }, duration * 1000);
+            })
+            .catch((error) => {
+              console.error("Failed to send intensity command", error);
+            });
+        } else {
+          console.error(`Intensity level '${level}' is not defined.`);
+        }
+      }
 
-    try {
-        updateStatus("Sending custom payload...");
-        const service = await server.getPrimaryService(serviceUuid);
-        const characteristic = await service.getCharacteristic(characteristicUuid);
-        await characteristic.writeValue(customPayload);
-        addToLog("Custom payload sent successfully.");
-        updateStatus("Payload sent.");
-    } catch (error) {
-        addToLog(`Sending custom payload failed: ${error}`);
-        updateStatus("Failed to send payload.");
-    }
-}
-        document.getElementById("connect").addEventListener("click", connectToDeviceAndInitializeServices);
-        document.getElementById("sendPayload").addEventListener("click", sendCustomPayload);
+      // Send custom payload to the device, now accepts an argument for dynamic payloads
+      async function sendCustomPayload(payload) {
+        const serviceUuid = "00001900-0000-1000-8000-00805f9b34fb"; // Use the actual service UUID
+        const characteristicUuid = "00001902-0000-1000-8000-00805f9b34fb"; // Use the actual characteristic UUID
+
+        try {
+          updateStatus("Sending custom payload...");
+          const service = await server.getPrimaryService(serviceUuid);
+          const characteristic = await service.getCharacteristic(
+            characteristicUuid
+          );
+          await characteristic.writeValue(payload);
+          addToLog("Custom payload sent successfully.");
+          updateStatus("Payload sent.");
+        } catch (error) {
+          addToLog(`Sending custom payload failed: ${error}`);
+          updateStatus("Failed to send payload.");
+        }
+      }
+
+      // Event listeners for user interaction
+      document
+        .getElementById("connect")
+        .addEventListener("click", connectToDeviceAndInitializeServices);
+      document.getElementById("sendPayload").addEventListener("click", () => {
+        testIntensity("Medium", 1); // Example call with default values
+      });
     </script>
-</body>
+  </body>
 </html>
-
-
