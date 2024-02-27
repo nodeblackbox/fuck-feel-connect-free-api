@@ -1,22 +1,185 @@
 <!DOCTYPE html>
 <html>
-<head>
+  <head>
     <title>Masseuse Control Panel</title>
     <!-- Include Socket.IO -->
     <script src="/socket.io/socket.io.js"></script>
     <script>
-        const socket = io();
+      const socket = io();
 
-        function sendCommand(command) {
-            socket.emit('sendCommand', command);
-        }
+      function sendCommand(command) {
+        socket.emit("sendCommand", command);
+      }
     </script>
-</head>
-<body>
-    <h1>Masseuse Control Panel</h1>
-   
+    <style>
+      .flex {
+        display: flex;
+      }
+      .items-center {
+        align-items: center;
+      }
+      .mb-4 {
+        margin-bottom: 1rem;
+      }
+      .bg-gray-200 {
+        background-color: #e2e8f0;
+      }
+      .rounded {
+        border-radius: 0.25rem;
+      }
+      .border {
+        border-width: 1px;
+      }
+      .border-gray-200 {
+        border-color: #e2e8f0;
+      }
+      .p-2 {
+        padding: 0.5rem;
+      }
+      .ml-2 {
+        margin-left: 0.5rem;
+      }
+      .bg-blue-500 {
+        background-color: #4299e1;
+      }
+      .hover\:bg-blue-700:hover {
+        background-color: #2b6cb0;
+      }
+      .text-white {
+        color: #fff;
+      }
+      .font-bold {
+        font-weight: 700;
+      }
+      .py-2 {
+        padding-top: 0.5rem;
+        padding-bottom: 0.5rem;
+      }
+      .px-4 {
+        padding-left: 1rem;
+        padding-right: 1rem;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Bluetooth Sex Toy Control Panel</h1>
+
     <button onclick="sendCommand('start')">Start Massage</button>
     <button onclick="sendCommand('stop')">Stop Massage</button>
-   
-</body>
+
+    <button id="connect">Connect to Device</button>
+    <button id="sendPayload">Send Custom Payload</button>
+    <div class="log" id="log"></div>
+    <div class="status" id="status"></div>
+    <div id="deviceInfo"></div>
+    <div id="intensity-levels-container" class="container"></div>
+    <script>
+      // Script begins here
+      document.addEventListener("DOMContentLoaded", () => {
+        // Mapping of intensity levels to numeric values
+        const intensityMap = {
+          Off: 0,
+          Low: 2,
+          LowMedium: 4,
+          Medium: 6,
+          MediumHigh: 8,
+          High: 9,
+          UltraHigh: 9
+        };
+
+        // Dynamically create UI elements for testing different intensity levels
+        const container = document.getElementById("intensity-levels-container");
+        Object.keys(intensityMap).forEach((level, index) => {
+          const levelDiv = document.createElement("div");
+          levelDiv.className = "flex items-center mb-4";
+          levelDiv.innerHTML = `
+        <div class="w-1/4">Level ${index + 1}</div>
+        <div class="w-1/4">
+            <input
+                id="duration-level-${index}"
+                type="number"
+                min="1"
+                max="60"
+                value="5"
+                class="bg-gray-200 rounded border border-gray-200 p-2"
+            />
+        </div>
+        <div class="w-1/4">
+            <select
+                id="intensity-level-${index}"
+                class="bg-gray-200 rounded"
+            >
+                ${Object.keys(intensityMap)
+                  .map(
+                    (intensity) =>
+                      `<option value="${intensity}">${intensity}</option>`
+                  )
+                  .join("")}
+            </select>
+        </div>
+        <div class="w-1/4">
+            <button
+                onclick="testIntensity(document.getElementById('intensity-level-${index}').value, document.getElementById('duration-level-${index}').value)"
+                class="ml-2 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+            >
+                Test
+            </button>
+        </div>
+    `;
+          container.appendChild(levelDiv);
+        });
+      });
+
+      const logElement = document.getElementById("log");
+      const statusElement = document.getElementById("status");
+
+      function addToLog(message) {
+        const entry = document.createElement("div");
+        entry.textContent = message;
+        logElement.appendChild(entry);
+        logElement.scrollTop = logElement.scrollHeight;
+      }
+
+      function updateStatus(message) {
+        statusElement.textContent = message;
+      }
+
+      function testIntensity(level, duration) {
+        const intensityMap = {
+          Off: 0,
+          Low: 2,
+          LowMedium: 4,
+          Medium: 6,
+          MediumHigh: 8,
+          High: 9,
+          UltraHigh: 9
+        };
+
+        if (intensityMap.hasOwnProperty(level)) {
+          // Construct a command string or object to send
+          const command = {
+            action: "setIntensity",
+            intensity: intensityMap[level],
+            duration: duration
+          };
+
+          // Log the command to the console for debugging
+          console.log(
+            `Sending command: Intensity '${level}' (${intensityMap[level]}) set for ${duration} seconds.`
+          );
+
+          // Send the command via Socket.IO
+          socket.emit("sendCommand", command);
+
+          // Optionally, simulate turning off the device after the set duration
+          setTimeout(() => {
+            console.log("Simulated device turn off after the duration.");
+            // You could also send a command to turn off the device here
+          }, duration * 1000);
+        } else {
+          console.error(`Intensity level '${level}' is not defined.`);
+        }
+      }
+    </script>
+  </body>
 </html>
