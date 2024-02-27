@@ -23,6 +23,9 @@ app.get('/', (req, res) => {
 app.get('/receiver', (req, res) => {
     res.render('receiver'); // For the receiver
 });
+app.get('/queuing', (req, res) => {
+    res.render('queuing'); // For the receiver
+});
 
 // Handle Socket.IO connections
 io.on('connection', (socket) => {

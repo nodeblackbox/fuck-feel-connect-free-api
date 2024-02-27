@@ -142,38 +142,7 @@
           const levelDiv = document.createElement("div");
           levelDiv.className = "flex items-center mb-4";
           levelDiv.innerHTML = `
-        <div class="w-1/4">Level ${index + 1}</div>
-        <div class="w-1/4">
-            <input
-                id="duration-level-${index}"
-                type="number"
-                min="1"
-                max="60"
-                value="5"
-                class="bg-gray-200 rounded border border-gray-200 p-2"
-            />
-        </div>
-        <div class="w-1/4">
-            <select
-                id="intensity-level-${index}"
-                class="bg-gray-200 rounded"
-            >
-                ${Object.keys(intensityMap)
-                  .map(
-                    (intensity) =>
-                      `<option value="${intensity}">${intensity}</option>`
-                  )
-                  .join("")}
-            </select>
-        </div>
-        <div class="w-1/4">
-            <button
-                onclick="testIntensity(document.getElementById('intensity-level-${index}').value, document.getElementById('duration-level-${index}').value)"
-                class="ml-2 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-            >
-                Test
-            </button>
-        </div>
+       
     `;
           container.appendChild(levelDiv);
         });
