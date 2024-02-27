@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Receiver Panel</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        let logOfCommands = ["commandsLog"];
+        socket.on('receiveCommand', (command) => {
+            console.log('Command received:', command);
+            logOfCommands.push(command);
+        });
+    </script>
+</head>
+<body>
+    <h1>Waiting for Commands...</h1>
+    <div id="commandsLog"></div>
+</body>
+</html>
