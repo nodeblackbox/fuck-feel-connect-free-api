@@ -11,43 +11,6 @@
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
-      class CommandQueue {
-        constructor() {
-          this.queue = [];
-          this.isProcessing = false;
-        }
-
-        enqueue(command) {
-          this.queue.push(command);
-          this.processQueue();
-        }
-
-        async processQueue() {
-          if (this.isProcessing || this.queue.length === 0) {
-            return;
-          }
-          this.isProcessing = true;
-          const command = this.queue.shift();
-          await this.executeCommand(command);
-          this.isProcessing = false;
-          this.processQueue();
-        }
-
-        async executeCommand(command) {
-          console.log(`Executing command: ${JSON.stringify(command)}`);
-          // Immediately execute the command without waiting for its duration to complete.
-          testIntensity(
-            intensityMapConverter[command.intensity],
-            command.duration || 1
-          );
-
-          // Resolve immediately after setting the intensity, do not block the queue processing.
-          return Promise.resolve();
-        }
-      }
-
-      const commandQueue = new CommandQueue();
-
       const intensityMapConverter = {
         0: "Off",
         1: "Low",
@@ -78,20 +41,14 @@
           socket.connect();
         });
 
-        //socket.on("receiveCommand", (command) => {
-        //  console.log("Command received:", command);
-        // displayCommand(command);
-        // console.log("Command received intensity:", command.intensity);
-        // console.log("Command received duration:", command.duration);
-
-        // Corrected line: use the intensity from the command object to get the corresponding intensity level
-        // testIntensity(intensityMapConverter[command.intensity], 1);
-        //});
         socket.on("receiveCommand", (command) => {
           console.log("Command received:", command);
           displayCommand(command);
-          // Enqueue the command for processing instead of direct execution
-          commandQueue.enqueue(command);
+          console.log("Command received intensity:", command.intensity);
+          console.log("Command received duration:", command.duration);
+
+          // Corrected line: use the intensity from the command object to get the corresponding intensity level
+          testIntensity(intensityMapConverter[command.intensity], 1);
         });
 
         function displayCommand(command) {
@@ -118,32 +75,17 @@
     <div id="intensity-levels-container" class="container"></div> -->
 
     <div class="container mx-auto p-4">
-      <h1 class="text-3xl font-bold mb-4">Waiting for Commands...</h1>
-      <div id="connectionStatus" class="p-2 bg-gray-700 rounded">
-        Connecting to socket...
-      </div>
-      <div
-        id="commandsLog"
-        class="mt-4 p-2 bg-gray-700 rounded min-h-[200px] overflow-y-auto"
-      ></div>
-      <div class="flex space-x-4 mt-4">
-        <button
-          id="connect"
-          class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-        >
-          Connect to Device
-        </button>
-        <button
-          id="sendPayload"
-          class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
-        >
-          Send Custom Payload
-        </button>
-      </div>
-      <div class="log mt-4" id="log"></div>
-      <div class="status mt-4" id="status"></div>
-      <div id="deviceInfo" class="mt-4"></div>
-      <div id="intensity-levels-container" class="container mt-4"></div>
+        <h1 class="text-3xl font-bold mb-4">Waiting for Commands...</h1>
+        <div id="connectionStatus" class="p-2 bg-gray-700 rounded">Connecting to socket...</div>
+        <div id="commandsLog" class="mt-4 p-2 bg-gray-700 rounded min-h-[200px] overflow-y-auto"></div>
+        <div class="flex space-x-4 mt-4">
+            <button id="connect" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Connect to Device</button>
+            <button id="sendPayload" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">Send Custom Payload</button>
+        </div>
+        <div class="log mt-4" id="log"></div>
+        <div class="status mt-4" id="status"></div>
+        <div id="deviceInfo" class="mt-4"></div>
+        <div id="intensity-levels-container" class="container mt-4"></div>
     </div>
 
     <script>
